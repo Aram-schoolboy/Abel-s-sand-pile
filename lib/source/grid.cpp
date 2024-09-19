@@ -9,7 +9,7 @@ void Cell::SetValue(const uint64_t number) {
 }
 
 void Cell::SetStability() {
-    is_stable = (value <= 3);
+    is_stable = value <= 3;
 }
 
 Row::Row() = default;
@@ -36,21 +36,16 @@ void Row::ExpandLeft(const uint32_t size, const uint32_t left_expand_number) {
     cells = temp;
 }
 
-Grid::Grid(const uint32_t row_count, const uint32_t row_size) {
-    this->row_count = row_count;
-    this->row_size = row_size;
+Grid::Grid(const uint32_t row_count, const uint32_t row_size): row_count(row_count),
+            row_size(row_size), top_max(0), left_max(0) {
     rows = new Row[row_count];
     for (int i = 0; i < row_count; ++i) {
         rows[i] = Row(row_size);
     }
-    top_max = 0;
     bottom_max = row_count - 1;
-    left_max = 0;
     right_max = row_size - 1;
-    bottom_expand_number = row_count / 2 + 1;
-    top_expand_number = bottom_expand_number;
-    right_expand_number = row_size / 2 + 1;
-    left_expand_number = right_expand_number;
+    top_expand_number = bottom_expand_number = row_count / 2 + 1;
+    left_expand_number = right_expand_number = row_size / 2 + 1;
 }
 
 void Grid::ExpandRight() {
@@ -65,6 +60,7 @@ void Grid::ExpandLeft() {
     for (int i = 0; i < row_count; ++i) {
         rows[i].ExpandLeft(row_size, left_expand_number);
     }
+
     row_size += left_expand_number;
     left_max += left_expand_number;
     right_max += left_expand_number;
@@ -101,7 +97,7 @@ void Grid::ExpandTop() {
         temp[i] = Row(row_size);
     }
     for (int i = top_expand_number; i < row_count + top_expand_number; ++i) {
-        temp[i] = Row(row_size);;
+        temp[i] = Row(row_size);
         CopyRow(rows[i - top_expand_number], temp[i]);
     }
     for (int i = 0; i < row_count; ++i) {
@@ -170,13 +166,13 @@ void Grid::SetBoardsIncrementNecessity() {
 
 void Grid::ToIncrementBoards() {
     if (increment_left_max) {
-        left_max--;
+        --left_max;
     } if (increment_right_max) {
-        right_max++;
+        ++right_max;
     } if (increment_top_max) {
-        top_max--;
+        --top_max;
     } if (increment_bottom_max) {
-        bottom_max++;
+        ++bottom_max;
     }
 }
 
