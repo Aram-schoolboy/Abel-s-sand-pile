@@ -10,6 +10,8 @@ static const uint8_t kBitsPerPixel = 4;
 static const uint8_t kNumberOfColors = 5;
 static const uint8_t kColorComponentsNumber = 4;
 
+void WriteUint32InBytesArray(uint8_t* array, size_t index, uint32_t value);
+
 void WriteFileHeader(std::ofstream& bmp, uint32_t width, uint32_t height, uint8_t padding);
 
 void WriteInfoHeader(std::ofstream& bmp, uint32_t width, uint32_t height);
