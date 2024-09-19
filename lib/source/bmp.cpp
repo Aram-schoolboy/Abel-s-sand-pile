@@ -3,16 +3,19 @@
 
 #include "../headers/bmp.h"
 
+void WriteUint32InBytesArray(uint8_t* array, size_t index, uint32_t value) {
+    for (int shift = 0, i = index; shift <= 24; shift += 8, ++i) {
+        array[i] = static_cast<uint8_t>(value >> shift);
+    }
+}
+
 void WriteFileHeader(std::ofstream& bmp, const uint32_t width, const uint32_t height, const uint8_t padding) {
     uint8_t file_header[kFileHeaderSize] = {};
     uint32_t size = kFileHeaderSize + kInfoHeaderSize + kPaletteSize + ((width + 1) / 2 + padding) * height;
     uint8_t bytes_before_pixels = kFileHeaderSize + kInfoHeaderSize + kPaletteSize;
     file_header[0] = 'B';
     file_header[1] = 'M';
-    file_header[2] = static_cast<uint8_t>(size);
-    file_header[3] = static_cast<uint8_t>(size >> 8);
-    file_header[4] = static_cast<uint8_t>(size >> 16);
-    file_header[5] = static_cast<uint8_t>(size >> 24);
+    WriteUint32InBytesArray(file_header, 2, size);
     file_header[10] = bytes_before_pixels;
     bmp.write(reinterpret_cast<char*>(file_header), kFileHeaderSize);
 }
@@ -20,14 +23,8 @@ void WriteFileHeader(std::ofstream& bmp, const uint32_t width, const uint32_t he
 void WriteInfoHeader(std::ofstream& bmp, const uint32_t width, const uint32_t height) {
     uint8_t info_header[kInfoHeaderSize] = {};
     info_header[0] = kInfoHeaderSize;
-    info_header[4] = static_cast<uint8_t>(width);
-    info_header[5] = static_cast<uint8_t>(width >> 8);
-    info_header[6] = static_cast<uint8_t>(width >> 16);
-    info_header[7] = static_cast<uint8_t>(width >> 24);
-    info_header[8] = static_cast<uint8_t>(height);
-    info_header[9] = static_cast<uint8_t>(height >> 8);
-    info_header[10] = static_cast<uint8_t>(height >> 16);
-    info_header[11] = static_cast<uint8_t>(height >> 24);
+    WriteUint32InBytesArray(info_header, 4, width);
+    WriteUint32InBytesArray(info_header, 8, height);
     info_header[12] = 1;
     info_header[14] = kBitsPerPixel;
     info_header[32] = kNumberOfColors;
@@ -56,10 +53,7 @@ void WritePadding(std::ofstream& bmp, const uint8_t padding) {
 }
 
 void WriteTwoPixels(std::ofstream& bmp, const uint8_t pixel1, const uint8_t pixel2) {
-    uint8_t byte = 0;
-    byte += pixel1 << kBitsPerPixel;
-    byte += pixel2;
-    bmp << byte;
+    bmp << (pixel1 << kBitsPerPixel) + pixel2;
 }
 
 void WritePixels(std::ofstream& bmp, const Grid& grid, const uint8_t padding) {
@@ -69,7 +63,8 @@ void WritePixels(std::ofstream& bmp, const Grid& grid, const uint8_t padding) {
             uint8_t pixel1 = kNumberOfColors - 1;
             if (pixel1 > grid.GetCellValue(reversed_i, j)) {
                 pixel1 = grid.GetCellValue(reversed_i, j);
-            } if (j == grid.right_max) {
+            }
+            if (j == grid.right_max) {
                 WriteTwoPixels(bmp, pixel1, 0);
                 continue;
             }
